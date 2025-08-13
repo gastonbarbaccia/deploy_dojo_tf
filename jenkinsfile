@@ -48,11 +48,18 @@ pipeline {
                 echo "La llave privada está en: ${env.PEM_PATH}"
             }
         }
-        stage('Conectar por SSH (opcional)') {
+        stage('Instalación de Defect Dojo') {
             steps {
                 sh """
-                    ssh -o StrictHostKeyChecking=no -i ${env.PEM_PATH} ubuntu@${env.INSTANCE_IP} 'echo Conexión exitosa a EC2'
-                """
+                ssh -o StrictHostKeyChecking=no -i ${env.PEM_PATH} ubuntu@${env.INSTANCE_IP} '
+                echo "Instalando Defect Dojo..."
+                sudo apt-get update -y
+                sudo apt-get install -y docker.io docker-compose git
+                git clone https://github.com/DefectDojo/django-DefectDojo.git
+                cd django-DefectDojo
+                sudo docker-compose up -d
+            '
+        """
             }
         }
     }
