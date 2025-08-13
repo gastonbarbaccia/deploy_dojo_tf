@@ -53,11 +53,8 @@ pipeline {
         stage('Instalación de Defect Dojo') {
             steps {
                 sh """
-                    ssh -o StrictHostKeyChecking=no -i ${env.PEM_PATH} ubuntu@${env.INSTANCE_IP} 
-                    'sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y docker.io docker-compose git &&
-                    git clone https://github.com/DefectDojo/django-DefectDojo.git  &&
-                    cd django-DefectDojo  &&
-                    sudo docker-compose up -d'
+                    ssh -o StrictHostKeyChecking=no -i ${env.PEM_PATH} ubuntu@${env.INSTANCE_IP} \
+                    'sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y docker.io docker-compose git && cd /home/ubuntu && git clone https://github.com/DefectDojo/django-DefectDojo.git && cd django-DefectDojo && sudo docker-compose up -d'
                 """
             }
         }
