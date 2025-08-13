@@ -4,8 +4,8 @@ pipeline {
         string(name: 'AWS_ACCESS_KEY_ID', defaultValue: '', description: 'AWS Access Key')
         password(name: 'AWS_SECRET_ACCESS_KEY', defaultValue: '', description: 'AWS Secret Key')
         string(name: 'AWS_REGION', defaultValue: 'us-east-1', description: 'AWS Region')
-        string(name: 'INSTANCE_NAME', defaultValue: 'jenkins-ec2', description: 'EC2 Name')
-        string(name: 'INSTANCE_TYPE', defaultValue: 't2.micro', description: 'EC2 Instance type')
+        string(name: 'INSTANCE_NAME', defaultValue: 'dojo', description: 'EC2 Name')
+        string(name: 'INSTANCE_TYPE', defaultValue: 't2.medium', description: 'EC2 Instance type')
     }
     environment {
         AWS_ACCESS_KEY_ID     = "${params.AWS_ACCESS_KEY_ID}"
@@ -53,11 +53,6 @@ pipeline {
                 ssh -o StrictHostKeyChecking=no -i ~/.ssh/${KEY_NAME} ubuntu@$INSTANCE_IP "sudo apt-get update && sudo apt-get upgrade -y"
                 '''
             }
-        }
-    }
-    post {
-        always {
-            sh 'terraform destroy -auto-approve || true'
         }
     }
 }
