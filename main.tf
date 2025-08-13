@@ -45,13 +45,13 @@ resource "aws_instance" "ec2" {
 
   user_data = <<-EOF
               #!/bin/bash
-                sudo apt-get update -y
-                sudo apt-get upgrade -y
-                sudo apt-get install docker.io docker-compose git -y
-                git clone https://github.com/DefectDojo/django-DefectDojo.git
-                cd django-DefectDojo
-                sudo docker-compose up -d
-              EOF
+              apt-get update -y && \
+              apt-get upgrade -y && \
+              apt-get install -y docker.io docker-compose git && \
+              git clone https://github.com/DefectDojo/django-DefectDojo.git && \
+              cd django-DefectDojo && \
+              docker-compose up -d
+  EOF
 
   tags = {
     Name = var.instance_name
