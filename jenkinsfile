@@ -16,7 +16,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/tu-repo/terraform-ec2.git'
+                git 'https://github.com/gastonbarbaccia/deploy_dojo_tf.git'
             }
         }
         stage('Generate SSH Key') {
@@ -50,7 +50,15 @@ pipeline {
                 sh '''
                 INSTANCE_IP=$(terraform output -raw instance_ip)
                 echo "EC2 Public IP: $INSTANCE_IP"
-                ssh -o StrictHostKeyChecking=no -i ~/.ssh/${KEY_NAME} ubuntu@$INSTANCE_IP "sudo apt-get update && sudo apt-get upgrade -y"
+                ssh -o StrictHostKeyChecking=no -i ~/.ssh/${KEY_NAME} ubuntu@$INSTANCE_IP "
+                    sudo apt-get update -y &&
+                    sudo apt-get upgrade -y &&
+                    sudo apt-get install docker.io -y &&
+                    sudo apt-get install docker-compose -y &&
+                    git clone https://github.com/DefectDojo/django-DefectDojo.git &&
+                    cd django-DefectDojo &&
+                    docker-compose up -d
+                "
                 '''
             }
         }
