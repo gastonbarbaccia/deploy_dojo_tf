@@ -16,26 +16,26 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Generar par de llaves SSH localmente
+# Generar par de llaves SSH
 resource "tls_private_key" "ssh_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-# Guardar la llave privada en un archivo .pem local
+# Guardar la llave privada localmente
 resource "local_file" "private_key" {
   content         = tls_private_key.ssh_key.private_key_pem
   filename        = "${path.module}/${var.instance_name}.pem"
   file_permission = "0400"
 }
 
-# Subir la llave pública a AWS como key pair
+# Crear key pair en AWS
 resource "aws_key_pair" "generated_key" {
   key_name   = "${var.instance_name}-key"
   public_key = tls_private_key.ssh_key.public_key_openssh
 }
 
-# Security group
+# Security group abierto (ajustar según necesidad)
 resource "aws_security_group" "open_all" {
   name        = "${var.instance_name}-sg"
   description = "Open all ports"
@@ -55,9 +55,9 @@ resource "aws_security_group" "open_all" {
   }
 }
 
-# Instancia EC2 con la llave generada
+# Instancia EC2 Ubuntu
 resource "aws_instance" "ec2" {
-  ami                         = "ami-08c40ec9ead489470" # Ubuntu 22.04 en us-east-1
+  ami                         = "ami-08c40ec9ead489470" # Ubuntu 22.04 us-east-1
   instance_type               = var.instance_type
   key_name                    = aws_key_pair.generated_key.key_name
   security_groups             = [aws_security_group.open_all.name]
@@ -68,8 +68,8 @@ resource "aws_instance" "ec2" {
   }
 }
 
-# Ejecutar apt-get update y upgrade vía SSH
-resource "null_resource" "update_upgrade" {
+# Configuración inicial por SSH
+resource "null_resource" "initial_setup" {
   depends_on = [aws_instance.ec2]
 
   connection {
@@ -81,16 +81,23 @@ resource "null_resource" "update_upgrade" {
 
   provisioner "remote-exec" {
     inline = [
+      # Actualizar sistema sin interacción
       "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -yq",
       "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get upgrade -yq",
+      
+      # Instalar dependencias
       "sudo apt-get install -yq docker.io docker-compose git",
       "sudo systemctl enable docker",
       "sudo systemctl start docker",
+      
+      # Clonar DefectDojo solo si no existe
       "cd /home/ubuntu && if [ ! -d django-DefectDojo ]; then git clone https://github.com/DefectDojo/django-DefectDojo.git; fi",
-      "cd /home/ubuntu/django-DefectDojo && nohup sudo docker-compose up -d >/dev/null 2>&1 &"
+      
+      # Descargar imágenes de Docker y levantar containers
+      "cd /home/ubuntu/django-DefectDojo && sudo docker-compose pull",
+      "cd /home/ubuntu/django-DefectDojo && sudo docker-compose up -d --no-recreate"
     ]
   }
-
 }
 
 output "instance_ip" {
