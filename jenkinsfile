@@ -37,34 +37,5 @@ pipeline {
                 """
             }
         }
-
-        stage('Setup DefectDojo via SSH') {
-            steps {
-                sh """
-                    chmod 400 ${WORKSPACE}/dojo.pem
-                    ssh -o StrictHostKeyChecking=no -i ${WORKSPACE}/dojo.pem ubuntu@${INSTANCE_IP} << 'EOF'
-                        echo "=== ACTUALIZANDO SISTEMA ==="
-                        sudo DEBIAN_FRONTEND=noninteractive apt-get update -y
-                        sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
-                        echo "=== INSTALANDO DEPENDENCIAS ==="
-                        sudo apt-get install -y docker.io docker-compose git
-                        sudo systemctl enable docker
-                        sudo systemctl start docker
-                        sudo usermod -aG docker ubuntu
-                        echo "=== CLONANDO DEFECTDOJO ==="
-                        cd /home/ubuntu
-                        if [ ! -d django-DefectDojo ]; then
-                        git clone https://github.com/DefectDojo/django-DefectDojo.git
-                        fi
-                        cd django-DefectDojo
-                        cp .env.sample .env
-                        echo "=== LEVANTANDO CONTAINERS ==="
-                        docker-compose --progress=plain pull
-                        docker-compose --progress=plain up -d --no-recreate
-                        echo "=== FINALIZADO ==="
-                    EOF
-                    """
-            }
-        }
     }
 }
