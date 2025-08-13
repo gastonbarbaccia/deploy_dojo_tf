@@ -51,7 +51,10 @@ pipeline {
         }
         stage('Instalación de Defect Dojo') {
             steps {
-                sh 'ls'
+                sh """
+                    ssh -o StrictHostKeyChecking=no -i ${env.PEM_PATH} ubuntu@${env.INSTANCE_IP} \
+                    'sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y docker.io docker-compose git'
+                """
             }
         }
     }
