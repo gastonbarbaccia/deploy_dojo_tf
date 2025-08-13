@@ -81,10 +81,6 @@ resource "null_resource" "initial_setup" {
 
   provisioner "remote-exec" {
     inline = [
-      # Actualizar sistema sin interacción
-      "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -yq",
-      "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get upgrade -yq",
-
       # Instalar dependencias
       "sudo apt-get install -yq docker.io docker-compose git",
       "sudo systemctl enable docker",
