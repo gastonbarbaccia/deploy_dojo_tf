@@ -81,25 +81,15 @@ resource "null_resource" "update_upgrade" {
 
   provisioner "remote-exec" {
     inline = [
-      # Actualización del sistema sin interacción
-      "sudo DEBIAN_FRONTEND=noninteractive apt-get update -yq",
-      "sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -yq",
-
-      # Instalación de dependencias
+      "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -yq",
+      "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get upgrade -yq",
       "sudo apt-get install -yq docker.io docker-compose git",
-
-      # Habilitar e iniciar Docker
       "sudo systemctl enable docker",
       "sudo systemctl start docker",
-
-      # Clonar DefectDojo si no existe
       "cd /home/ubuntu && if [ ! -d django-DefectDojo ]; then git clone https://github.com/DefectDojo/django-DefectDojo.git; fi",
-
-      # Ejecutar docker-compose como usuario ubuntu
       "cd /home/ubuntu/django-DefectDojo && sudo docker-compose up -d"
     ]
   }
-
 }
 
 output "instance_ip" {
