@@ -14,17 +14,8 @@ variable "instance_name" {}
 
 variable "instance_type" {}
 
-variable "key_name" {}
-
-variable "public_key_path" {}
-
 provider "aws" {
   region = var.aws_region
-}
-
-resource "aws_key_pair" "generated" {
-  key_name   = var.key_name
-  public_key = file(var.public_key_path)
 }
 
 resource "aws_security_group" "open_all" {
@@ -49,9 +40,18 @@ resource "aws_security_group" "open_all" {
 resource "aws_instance" "ec2" {
   ami                         = "ami-08c40ec9ead489470" # Ubuntu 22.04 en us-east-1
   instance_type               = var.instance_type
-  key_name                    = aws_key_pair.generated.key_name
   security_groups             = [aws_security_group.open_all.name]
   associate_public_ip_address = true
+
+  user_data = <<-EOF
+              #!/bin/bash
+                sudo apt-get update -y
+                sudo apt-get upgrade -y
+                sudo apt-get install docker.io docker-compose git -y
+                git clone https://github.com/DefectDojo/django-DefectDojo.git
+                cd django-DefectDojo
+                sudo docker-compose up -d
+              EOF
 
   tags = {
     Name = var.instance_name
