@@ -87,9 +87,10 @@ resource "null_resource" "update_upgrade" {
       "sudo systemctl enable docker",
       "sudo systemctl start docker",
       "cd /home/ubuntu && if [ ! -d django-DefectDojo ]; then git clone https://github.com/DefectDojo/django-DefectDojo.git; fi",
-      "cd /home/ubuntu/django-DefectDojo && sudo docker-compose up -d"
+      "cd /home/ubuntu/django-DefectDojo && nohup sudo docker-compose up -d >/dev/null 2>&1 &"
     ]
   }
+
 }
 
 output "instance_ip" {
