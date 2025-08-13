@@ -68,26 +68,6 @@ resource "aws_instance" "ec2" {
   }
 }
 
-# Configuración inicial por SSH
-resource "null_resource" "initial_setup" {
-  depends_on = [aws_instance.ec2]
-
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = tls_private_key.ssh_key.private_key_pem
-    host        = aws_instance.ec2.public_ip
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get install -y git"
-    ]
-  }
-}
-
-
-
 output "instance_ip" {
   value = aws_instance.ec2.public_ip
 }
