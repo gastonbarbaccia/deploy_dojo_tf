@@ -31,10 +31,10 @@ pipeline {
         }
         stage('Terraform Init') {
             steps {
+                sh 'terraform init'
                 sh 'terraform version'
                 sh 'terraform fmt -check'
                 sh 'terraform validate'
-                sh 'terraform init'
             }
         }
         stage('Terraform Apply') {
