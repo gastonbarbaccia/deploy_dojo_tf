@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'AWS_ACCESS_KEY_ID', defaultValue: '', description: 'AWS Access Key')
+        password(name: 'AWS_SECRET_ACCESS_KEY', defaultValue: '', description: 'AWS Secret Key')
+        string(name: 'AWS_REGION', defaultValue: 'us-east-1', description: 'AWS Region')
+        string(name: 'INSTANCE_NAME', defaultValue: 'jenkins-ec2', description: 'EC2 Name')
+        string(name: 'INSTANCE_TYPE', defaultValue: 't2.micro', description: 'EC2 Instance type')
+    }
+    environment {
+        AWS_ACCESS_KEY_ID     = "${params.AWS_ACCESS_KEY_ID}"
+        AWS_SECRET_ACCESS_KEY = "${params.AWS_SECRET_ACCESS_KEY}"
+        AWS_REGION            = "${params.AWS_REGION}"
+        KEY_NAME              = "jenkins-key-${env.BUILD_ID}"
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/tu-repo/terraform-ec2.git'
+            }
+        }
+        stage('Generate SSH Key') {
+            steps {
+                sh '''
+                mkdir -p ~/.ssh
+                ssh-keygen -t rsa -b 4096 -f ~/.ssh/${KEY_NAME} -N ""
+                chmod 400 ~/.ssh/${KEY_NAME}
+                '''
+            }
+        }
+        stage('Terraform Init') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+        stage('Terraform Apply') {
+            steps {
+                sh """
+                terraform apply -auto-approve \
+                    -var aws_region=${AWS_REGION} \
+                    -var instance_name=${params.INSTANCE_NAME} \
+                    -var instance_type=${params.INSTANCE_TYPE} \
+                    -var key_name=${KEY_NAME} \
+                    -var public_key_path=~/.ssh/${KEY_NAME}.pub
+                """
+            }
+        }
+        stage('Run Remote Script') {
+            steps {
+                sh '''
+                INSTANCE_IP=$(terraform output -raw instance_ip)
+                echo "EC2 Public IP: $INSTANCE_IP"
+                ssh -o StrictHostKeyChecking=no -i ~/.ssh/${KEY_NAME} ubuntu@$INSTANCE_IP "sudo apt-get update && sudo apt-get upgrade -y"
+                '''
+            }
+        }
+    }
+    post {
+        always {
+            sh 'terraform destroy -auto-approve || true'
+        }
+    }
+}
