@@ -82,7 +82,12 @@ resource "null_resource" "update_upgrade" {
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update -y",
-      "sudo apt-get upgrade -y"
+      "sudo apt-get upgrade -y",
+      "sudo apt-get install -y docker.io docker-compose git",
+      "cd /home/ubuntu",
+      "git clone https://github.com/DefectDojo/django-DefectDojo.git",
+      "cd django-DefectDojo",
+      "sudo docker-compose up -d"
     ]
   }
 }
