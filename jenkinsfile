@@ -19,7 +19,7 @@ pipeline {
                     url: 'https://github.com/gastonbarbaccia/deploy_dojo_tf.git'
             }
         }
-        stage('Terraform Init') {
+        stage('Terraform Init & Validate') {
             steps {
                 sh 'terraform init'
                 sh 'terraform version'
@@ -30,10 +30,28 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 sh """
-                terraform apply -auto-approve \
-                    -var aws_region=${AWS_REGION} \
-                    -var instance_name=${params.INSTANCE_NAME} \
-                    -var instance_type=${params.INSTANCE_TYPE} \
+                    terraform apply -auto-approve \
+                        -var aws_region=${AWS_REGION} \
+                        -var instance_name=${params.INSTANCE_NAME} \
+                        -var instance_type=${params.INSTANCE_TYPE}
+                """
+            }
+        }
+        stage('Obtener Outputs') {
+            steps {
+                script {
+                    // Capturar IP pública y ruta de la llave privada
+                    env.INSTANCE_IP = sh(script: 'terraform output -raw instance_ip', returnStdout: true).trim()
+                    env.PEM_PATH    = sh(script: 'terraform output -raw private_key_path', returnStdout: true).trim()
+                }
+                echo "La IP de la instancia es: ${env.INSTANCE_IP}"
+                echo "La llave privada está en: ${env.PEM_PATH}"
+            }
+        }
+        stage('Conectar por SSH (opcional)') {
+            steps {
+                sh """
+                    ssh -o StrictHostKeyChecking=no -i ${env.PEM_PATH} ubuntu@${env.INSTANCE_IP} 'echo Conexión exitosa a EC2'
                 """
             }
         }
