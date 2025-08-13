@@ -16,4 +16,4 @@ sudo -u ubuntu git clone https://github.com/DefectDojo/django-DefectDojo.git
 cd django-DefectDojo
 
 # Ejecutar docker-compose como usuario ubuntu
-sudo -u ubuntu docker-compose up -d
+sudo docker-compose up -d
