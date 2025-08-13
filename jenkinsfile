@@ -16,7 +16,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/gastonbarbaccia/deploy_dojo_tf.git'
+                git branch: 'main',
+                    url: 'https://github.com/gastonbarbaccia/deploy_dojo_tf.git'
             }
         }
         stage('Generate SSH Key') {
