@@ -68,6 +68,39 @@ resource "aws_instance" "ec2" {
   }
 }
 
+# Configuración inicial por SSH
+resource "null_resource" "initial_setup" {
+  depends_on = [aws_instance.ec2]
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = tls_private_key.ssh_key.private_key_pem
+    host        = aws_instance.ec2.public_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo '=== ACTUALIZANDO SISTEMA ==='",
+      "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -yq",
+      "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get upgrade -yq",
+      "echo '=== INSTALANDO DEPENDENCIAS ==='",
+      "sudo apt-get install -yq docker.io docker-compose git",
+      "sudo systemctl enable docker",
+      "sudo systemctl start docker",
+      "sudo usermod -aG docker ubuntu",
+      "echo '=== CLONANDO DEFECTDOJO ==='",
+      "cd /home/ubuntu && if [ ! -d django-DefectDojo ]; then git clone https://github.com/DefectDojo/django-DefectDojo.git; fi",
+      "cd /home/ubuntu/django-DefectDojo && cp .env.sample .env",
+      "echo '=== LEVANTANDO CONTAINERS ==='",
+      "cd /home/ubuntu/django-DefectDojo && docker-compose pull",
+      "cd /home/ubuntu/django-DefectDojo && docker-compose up -d --no-recreate",
+      "echo '=== FINALIZADO ==='"
+    ]
+  }
+}
+
+
 output "instance_ip" {
   value = aws_instance.ec2.public_ip
 }
