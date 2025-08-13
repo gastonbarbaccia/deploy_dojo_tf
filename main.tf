@@ -90,8 +90,7 @@ resource "null_resource" "initial_setup" {
       "cd /home/ubuntu && if [ ! -d django-DefectDojo ]; then git clone https://github.com/DefectDojo/django-DefectDojo.git; fi",
 
       # Descargar imágenes de Docker y levantar containers
-      "cd /home/ubuntu/django-DefectDojo && nohup sudo docker-compose pull > docker_pull.log 2>&1 &",
-      "cd /home/ubuntu/django-DefectDojo && nohup sudo docker-compose up -d --no-recreate > docker_up.log 2>&1 &"
+      "cd /home/ubuntu/django-DefectDojo && sudo docker-compose up -d"
 
     ]
   }
