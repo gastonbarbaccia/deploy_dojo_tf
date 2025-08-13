@@ -84,15 +84,15 @@ resource "null_resource" "initial_setup" {
       # Actualizar sistema sin interacción
       "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -yq",
       "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get upgrade -yq",
-      
+
       # Instalar dependencias
       "sudo apt-get install -yq docker.io docker-compose git",
       "sudo systemctl enable docker",
       "sudo systemctl start docker",
-      
+
       # Clonar DefectDojo solo si no existe
       "cd /home/ubuntu && if [ ! -d django-DefectDojo ]; then git clone https://github.com/DefectDojo/django-DefectDojo.git; fi",
-      
+
       # Descargar imágenes de Docker y levantar containers
       "cd /home/ubuntu/django-DefectDojo && sudo docker-compose pull",
       "cd /home/ubuntu/django-DefectDojo && sudo docker-compose up -d --no-recreate"
