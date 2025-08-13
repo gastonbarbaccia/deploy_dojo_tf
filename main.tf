@@ -81,8 +81,6 @@ resource "null_resource" "initial_setup" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update -y",
-      "sudo apt-get upgrade -y",
       "sudo apt-get install -y git"
     ]
   }
