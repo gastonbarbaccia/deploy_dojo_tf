@@ -47,6 +47,7 @@ pipeline {
                 echo "La IP de la instancia es: ${env.INSTANCE_IP}"
                 echo "La llave privada está en: ${env.PEM_PATH}"
                 sh 'ls'
+                sh 'sleep 60' // Esperar 60 segundos para asegurar que la instancia esté lista
             }
         }
         stage('Instalación de Defect Dojo') {
