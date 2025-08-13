@@ -43,15 +43,7 @@ resource "aws_instance" "ec2" {
   security_groups             = [aws_security_group.open_all.name]
   associate_public_ip_address = true
 
-  user_data = <<-EOF
-    #!/bin/bash
-    apt-get update -y
-    apt-get upgrade -y
-    apt-get install -y docker.io docker-compose git
-    git clone https://github.com/DefectDojo/django-DefectDojo.git
-    cd django-DefectDojo
-    docker-compose up -d
-EOF
+  user_data = file("${path.module}/bootstrap.sh")
 
   tags = {
     Name = var.instance_name
