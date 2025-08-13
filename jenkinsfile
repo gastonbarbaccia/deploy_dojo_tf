@@ -46,29 +46,12 @@ pipeline {
                 }
                 echo "La IP de la instancia es: ${env.INSTANCE_IP}"
                 echo "La llave privada está en: ${env.PEM_PATH}"
+                sh 'ls'
             }
         }
         stage('Instalación de Defect Dojo') {
             steps {
-                sh """
-                    # Esperar a que EC2 levante el puerto 22
-                    echo "Esperando que EC2 esté lista..."
-                    for i in {1..30}; do
-                        nc -z ${env.INSTANCE_IP} 22 && break
-                        sleep 5
-                    done
-
-                    # Ejecutar instalación en la instancia
-                    ssh -o StrictHostKeyChecking=no -i ${env.PEM_PATH} ubuntu@${env.INSTANCE_IP} << 'EOF'
-                        echo "Instalando Defect Dojo..."
-                        sudo apt-get update -y
-                        sudo apt-get upgrade -y
-                        sudo apt-get install -y docker.io docker-compose git
-                        git clone https://github.com/DefectDojo/django-DefectDojo.git
-                        cd django-DefectDojo
-                        sudo docker-compose up -d
-                EOF
-                """
+                sh 'ls'
             }
         }
     }
