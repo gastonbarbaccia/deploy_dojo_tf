@@ -81,29 +81,25 @@ resource "null_resource" "initial_setup" {
 
   provisioner "remote-exec" {
     inline = [
-      # Actualizar sistema sin interacción
+      "echo '=== ACTUALIZANDO SISTEMA ==='",
       "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -yq",
       "sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get upgrade -yq",
-
-      # Instalar dependencias
+      "echo '=== INSTALANDO DEPENDENCIAS ==='",
       "sudo apt-get install -yq docker.io docker-compose git",
       "sudo systemctl enable docker",
       "sudo systemctl start docker",
       "sudo usermod -aG docker ubuntu",
-
-      # Clonar DefectDojo solo si no existe
+      "echo '=== CLONANDO DEFECTDOJO ==='",
       "cd /home/ubuntu && if [ ! -d django-DefectDojo ]; then git clone https://github.com/DefectDojo/django-DefectDojo.git; fi",
-
-      # Preparar archivo .env
       "cd /home/ubuntu/django-DefectDojo && cp .env.sample .env",
-
-      # Descargar imágenes y levantar containers (logs en consola)
+      "echo '=== LEVANTANDO CONTAINERS ==='",
       "cd /home/ubuntu/django-DefectDojo && docker-compose pull",
-      "cd /home/ubuntu/django-DefectDojo && docker-compose up -d --no-recreate"
+      "cd /home/ubuntu/django-DefectDojo && docker-compose up -d --no-recreate",
+      "echo '=== FINALIZADO ==='"
     ]
   }
-
 }
+
 
 output "instance_ip" {
   value = aws_instance.ec2.public_ip
