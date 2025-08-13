@@ -9,15 +9,33 @@ terraform {
 }
 
 variable "aws_region" {}
-
 variable "instance_name" {}
-
 variable "instance_type" {}
 
 provider "aws" {
   region = var.aws_region
 }
 
+# Generar par de llaves SSH localmente
+resource "tls_private_key" "ssh_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+# Guardar la llave privada en un archivo .pem local
+resource "local_file" "private_key" {
+  content         = tls_private_key.ssh_key.private_key_pem
+  filename        = "${path.module}/${var.instance_name}.pem"
+  file_permission = "0400"
+}
+
+# Subir la llave pública a AWS como key pair
+resource "aws_key_pair" "generated_key" {
+  key_name   = "${var.instance_name}-key"
+  public_key = tls_private_key.ssh_key.public_key_openssh
+}
+
+# Security group
 resource "aws_security_group" "open_all" {
   name        = "${var.instance_name}-sg"
   description = "Open all ports"
@@ -37,19 +55,42 @@ resource "aws_security_group" "open_all" {
   }
 }
 
+# Instancia EC2 con la llave generada
 resource "aws_instance" "ec2" {
   ami                         = "ami-08c40ec9ead489470" # Ubuntu 22.04 en us-east-1
   instance_type               = var.instance_type
+  key_name                    = aws_key_pair.generated_key.key_name
   security_groups             = [aws_security_group.open_all.name]
   associate_public_ip_address = true
-
-  user_data = file("${path.module}/bootstrap.sh")
 
   tags = {
     Name = var.instance_name
   }
 }
 
+# Ejecutar apt-get update y upgrade vía SSH
+resource "null_resource" "update_upgrade" {
+  depends_on = [aws_instance.ec2]
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = tls_private_key.ssh_key.private_key_pem
+    host        = aws_instance.ec2.public_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get upgrade -y"
+    ]
+  }
+}
+
 output "instance_ip" {
   value = aws_instance.ec2.public_ip
+}
+
+output "private_key_path" {
+  value = local_file.private_key.filename
 }
